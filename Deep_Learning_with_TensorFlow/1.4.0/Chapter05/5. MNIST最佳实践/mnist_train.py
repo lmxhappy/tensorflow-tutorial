@@ -25,14 +25,19 @@ def train(mnist):
 
     variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
     variables_averages_op = variable_averages.apply(tf.trainable_variables())
-    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
+    true_labels = tf.argmax(y_, 1)
+    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=true_labels)
     cross_entropy_mean = tf.reduce_mean(cross_entropy)
     loss = cross_entropy_mean + tf.add_n(tf.get_collection('losses'))
+
+
+
     learning_rate = tf.train.exponential_decay(
         LEARNING_RATE_BASE,
         global_step,
         mnist.train.num_examples / BATCH_SIZE, LEARNING_RATE_DECAY,
         staircase=True)
+
     train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
     with tf.control_dependencies([train_step, variables_averages_op]):
         train_op = tf.no_op(name='train')
